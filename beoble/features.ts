@@ -1,4 +1,7 @@
 import fs from 'fs'
+import axios from 'axios'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
 
 export async function sleep(ms: number) {
   return new Promise((res) => {
@@ -44983,4 +44986,53 @@ export function generateNickname() {
     adjectives[Math.floor(Math.random() * adjectives.length)]
 
   return randomAdjective.toLowerCase()
+}
+
+export async function getImage(count = 0):Promise<string> {
+  try{
+    const options = {
+      method: 'GET',
+      headers: {accept: '*/*', 'x-api-key': 'f62dadc6-2417-5b35-9d8c-be516463caf1'}
+    };
+  
+    const response = await axios('https://api.reservoir.tools/collections/trending/v1', options)
+    const {id,tokenCount} = (response.data.collections[Math.floor(Math.random() * response.data.collections.length)])
+    const resp = await axios(`https://api.reservoir.tools/tokens/v7?collection=${id}&tokenName=${Math.floor(Math.random() * tokenCount)}`, options)
+    const image = (resp.data.tokens[0].token.image.replace('?width=512',''))
+    const img = image.split('.')
+    const img_path = `${uuidv4()}.jpg`
+    if (img[img.length - 1] !== "gif") {
+      const data_ = await axios({
+        method: 'get',
+        url: `${image}?width=512`,
+        responseType: 'stream',
+      })        
+      await new Promise(async (resolve,reject) => {
+        const writeStream = fs.createWriteStream(`${path.join(__dirname, img_path)}`)
+
+        data_.data.on('end', () => {
+          writeStream.end();
+          resolve(null);
+        });
+  
+        data_.data.on('error', (error:any) => {
+          writeStream.end();
+          reject(error);
+        });
+  
+        data_.data.pipe(writeStream);
+
+      })
+  
+      return img_path
+    }
+    return await getImage()
+  } catch(e) {
+    count++
+    if(count < 3) {
+      return await getImage(count)
+    } else { 
+      throw new Error("Invalid download")
+    }
+  }
 }

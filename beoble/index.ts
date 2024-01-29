@@ -7,9 +7,10 @@ import { v4 as uuidv4 } from 'uuid'
 import WebSocket from 'ws'
 import { chatroom_id } from '../config'
 import { logger } from '../logger/logger'
-import { generateNickname, sleep, getRefferalCode } from './features'
+import { generateNickname, sleep, getRefferalCode, getImage } from './features'
 import { getRandomGreeting } from './greeting'
-
+import FormData from 'form-data';
+import path from 'path'
 export class BeobleAcc {
   publicKey: string
   address: string
@@ -20,6 +21,7 @@ export class BeobleAcc {
   userData: any
   id: any
   access_token = ''
+  errors = 0
   constructor(privateKey: string, proxy: string) {
     this.wallet = new ethers.Wallet(privateKey)
     this.publicKey = this.wallet.publicKey
@@ -129,6 +131,22 @@ export class BeobleAcc {
 
   registr = async () => {
     if (this.userData.data.data[0].representative_media.main_profile === null) {
+      // const img_path:any = await getImage()
+      // const formData = new FormData();
+      // const avatarFileContent = fs.readFileSync(path.join(__dirname, img_path));
+      // formData.append('upload_file', avatarFileContent, {
+      //   filename: `${uuidv4()}.jpg`,
+      //   contentType: 'image/jpeg',
+      // });
+      // formData.append('upload_type', 'USER');
+      // const response = await this.API.post('https://api.beoble.app/v1/file/upload', formData, {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryPTyA6BErvPbZslVB',
+      //     'Referer': 'https://beoble.app/',
+      //   },
+      // })
+      // const imgLink = response.data.data  
+      // await fs.promises.unlink(path.join(__dirname, img_path));
       await this.API.put(`/v1/user/${this.id}/profile`, {
         representative_media: {
           image_source: `https://cdn.beoble.app/beoble_assets/png/default_profiles/default_cat_${
@@ -214,6 +232,14 @@ export class BeobleAcc {
       { agent }
     )
 
+    ws.on('error',(e) => {
+      console.log(e)
+      if(this.errors < 2) {
+        this.errors += 1
+        this.dailyQuests()
+      }
+    })
+
     await new Promise((res) => {
       ws.on('open', () => {
         res(null)
@@ -248,6 +274,10 @@ export class BeobleAcc {
       }
     })
 
+    ws.on('error',(e) => {
+      console.log(e)
+    })
+
     const message = {
       action_type: 'SEND_CHAT',
       data: {
@@ -261,7 +291,7 @@ export class BeobleAcc {
     ws.send(JSON.stringify(message))
     await sleep(1000)
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       const message = {
         action_type: 'SEND_CHAT',
         data: {

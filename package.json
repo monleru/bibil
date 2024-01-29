@@ -21,16 +21,8 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
-    "@eslint-kit/eslint-config-base": "^5.0.2",
-    "@eslint-kit/eslint-config-node": "^2.0.0",
-    "@eslint-kit/eslint-config-patch": "^1.0.0",
-    "@eslint-kit/eslint-config-prettier": "^5.0.0",
-    "@eslint-kit/eslint-config-typescript": "^5.2.0",
     "@types/user-agents": "^1.0.4",
     "@types/uuid": "^9.0.7",
-    "@types/ws": "^8.5.10",
-    "@typescript-eslint/parser": "^6.17.0",
-    "eslint": "7.32.0",
-    "prettier": "2.3.0"
+    "@types/ws": "^8.5.10"
   }
 }
